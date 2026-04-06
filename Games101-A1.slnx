@@ -1,0 +1,12 @@
+<Solution>
+  <Configurations>
+    <Platform Name="x64" />
+    <Platform Name="x86" />
+  </Configurations>
+  <Project Path="G:/Games101/Housework/Games101-A1/Games101-A1.vcxproj">
+    <Configuration Solution="Debug|x64" Project="Debug|x64" />
+    <Configuration Solution="Debug|Win32" Project="Debug|Win32" />
+    <Configuration Solution="Release|x64" Project="Release|x64" />
+    <Configuration Solution="Release|Win32" Project="Release|Win32" />
+  </Project>
+</Solution>

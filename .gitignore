@@ -1,0 +1,33 @@
+# 1. UE 自动生成目录（无需版本控制，克隆后会重新生成）
+/Binaries/
+/Intermediate/
+/Saved/
+/DerivedDataCache/
+/GeneratedDataCache/
+/.vs/
+/.vscode/
+/Plugins/
+/Intermediate/
+/.idea/
+# 2. UE 资源目录（所有 .uasset/.umap/纹理/模型等，通过网盘同步）
+/Content/Assets/
+# 3. IDE 工程文件+临时文件（本地生成即可，无需追踪）
+*.sln
+*.suo
+*.sdf
+*.opensdf
+*.vc.db
+*.xcodeproj/
+*.xcodeworkspace/
+*.tlog
+*.obj
+*.pdb
+*.ilk
+*.exe
+*.idb
+*.recipe
+# 4. 日志/备份/临时文件
+*.log
+*.bak
+*.tmp
+*.sln.docstates
