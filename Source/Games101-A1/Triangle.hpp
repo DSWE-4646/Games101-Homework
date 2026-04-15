@@ -11,6 +11,7 @@ using namespace Eigen;
 class Triangle
 {
   public:
+  //几个内部3个子元素的数组，存储三角形每个顶点的信息
     Vector3f v[3]; /*the original coordinates of the triangle, v0, v1, v2 in
                       counter clockwise order*/
     /*Per vertex values*/
@@ -19,12 +20,15 @@ class Triangle
     Vector3f normal[3];     // normal vector for each vertex
 
     // Texture *tex;
-    Triangle();
+    Triangle();  // 空构造函数：创建一个空三角形
 
+    //快速返回顶点坐标
     Eigen::Vector3f a() const { return v[0]; }
     Eigen::Vector3f b() const { return v[1]; }
     Eigen::Vector3f c() const { return v[2]; }
 
+
+    //ind: 第i个顶点
     void setVertex(int ind, Vector3f ver); /*set i-th vertex coordinates */
     void setNormal(int ind, Vector3f n);   /*set i-th vertex normal vector*/
     void setColor(int ind, float r, float g, float b); /*set i-th vertex color*/

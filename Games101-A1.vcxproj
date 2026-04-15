@@ -22,22 +22,17 @@
     <Folder Include="..\图形学\GAMES101_作业\作业1\代码框架\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Source\Games101-A1\.idea\.gitignore" />
-    <Content Include="Source\Games101-A1\.idea\encodings.xml" />
-    <Content Include="Source\Games101-A1\.idea\indexLayout.xml" />
-    <Content Include="Source\Games101-A1\.idea\projectSettingsUpdater.xml" />
-    <Content Include="Source\Games101-A1\.idea\workspace.xml" />
-    <Content Include="Source\Games101-A1\CMakeLists.txt" />
-    <Content Include="Source\Games101-A1\untitled" />
+    <Content Include="Source\Assignment2\CMakeLists.txt" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Source\Games101-A1\main.cpp" />
-    <ClCompile Include="Source\Games101-A1\rasterizer.cpp" />
-    <ClCompile Include="Source\Games101-A1\Triangle.cpp" />
+    <ClInclude Include="Source\Assignment2\global.hpp" />
+    <ClInclude Include="Source\Assignment2\rasterizer.hpp" />
+    <ClInclude Include="Source\Assignment2\Triangle.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source\Games101-A1\rasterizer.hpp" />
-    <ClInclude Include="Source\Games101-A1\Triangle.hpp" />
+    <ClCompile Include="Source\Assignment2\main.cpp" />
+    <ClCompile Include="Source\Assignment2\rasterizer.cpp" />
+    <ClCompile Include="Source\Assignment2\Triangle.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
@@ -140,6 +135,7 @@
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
       <AdditionalIncludeDirectories>G:\Games101\OpenCV\4.12.0\opencv\build\include;G:\Games101\eigen-5.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <AdditionalOptions>/utf-8</AdditionalOptions>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -157,6 +153,7 @@
       <PreprocessorDefinitions>NDEBUG;_CONSOLE;%(PreprocessorDefinitions)</PreprocessorDefinitions>
       <ConformanceMode>true</ConformanceMode>
       <LanguageStandard>stdcpp20</LanguageStandard>
+      <AdditionalIncludeDirectories>G:\Games101\OpenCV\4.12.0\opencv\build\include;G:\Games101\eigen-5.0.0;%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>

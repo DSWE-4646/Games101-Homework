@@ -56,9 +56,6 @@ Eigen::Matrix4f get_projection_matrix(float eye_fov, float aspect_ratio,
                         0, 0, 1, 0; //投影变换矩阵
     
     projection = ProJectionMatrix * projection;
-    // TODO: Implement this function
-    // Create the projection matrix for the given parameters.
-    // Then return it.
 
     return projection;
 }

@@ -33,7 +33,7 @@ void Triangle::setColor(int ind, float r, float g, float b)
         throw std::runtime_error("Invalid color values");
     }
 
-    color[ind] = Vector3f((float)r / 255., (float)g / 255., (float)b / 255.);
+    color[ind] = Vector3f((float)r / 255., (float)g / 255., (float)b / 255.); //CG中，颜色必须是 0.0~1.0 的浮点数
     return;
 }
 void Triangle::setTexCoord(int ind, float s, float t)
@@ -46,6 +46,6 @@ std::array<Vector4f, 3> Triangle::toVector4() const
     std::array<Vector4f, 3> res;
     std::transform(std::begin(v), std::end(v), res.begin(), [](auto& vec) {
         return Vector4f(vec.x(), vec.y(), vec.z(), 1.f);
-    });
+    }); //使用迭代器自动将三角形的3个顶点存储在一个其次向量中并放入一个数组返回
     return res;
 }
