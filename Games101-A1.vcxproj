@@ -22,17 +22,45 @@
     <Folder Include="..\图形学\GAMES101_作业\作业1\代码框架\" />
   </ItemGroup>
   <ItemGroup>
-    <Content Include="Source\Assignment2\CMakeLists.txt" />
+    <Content Include="Source\Assignment3\Assignment3.pdf" />
+    <Content Include="Source\Assignment3\Code\CMakeLists.txt" />
+    <Content Include="Source\Assignment3\Code\models\bunny\bunny.obj" />
+    <Content Include="Source\Assignment3\Code\models\Crate\Crate1.3ds" />
+    <Content Include="Source\Assignment3\Code\models\Crate\Crate1.blend" />
+    <Content Include="Source\Assignment3\Code\models\Crate\Crate1.mtl" />
+    <Content Include="Source\Assignment3\Code\models\Crate\Crate1.obj" />
+    <Content Include="Source\Assignment3\Code\models\Crate\CrateImage1.JPG" />
+    <Content Include="Source\Assignment3\Code\models\Crate\CrateImage2.JPG" />
+    <Content Include="Source\Assignment3\Code\models\Crate\crate_1.jpg" />
+    <Content Include="Source\Assignment3\Code\models\cube\cube.mtl" />
+    <Content Include="Source\Assignment3\Code\models\cube\cube.obj" />
+    <Content Include="Source\Assignment3\Code\models\cube\wall.tif" />
+    <Content Include="Source\Assignment3\Code\models\cube\wall1.tif" />
+    <Content Include="Source\Assignment3\Code\models\rock\rock.mtl" />
+    <Content Include="Source\Assignment3\Code\models\rock\rock.obj" />
+    <Content Include="Source\Assignment3\Code\models\rock\rock.png" />
+    <Content Include="Source\Assignment3\Code\models\spot\hmap.jpg" />
+    <Content Include="Source\Assignment3\Code\models\spot\README.txt" />
+    <Content Include="Source\Assignment3\Code\models\spot\spot_control_mesh.obj" />
+    <Content Include="Source\Assignment3\Code\models\spot\spot_quadrangulated.obj" />
+    <Content Include="Source\Assignment3\Code\models\spot\spot_texture.png" />
+    <Content Include="Source\Assignment3\Code\models\spot\spot_texture.svg" />
+    <Content Include="Source\Assignment3\Code\models\spot\spot_triangulated.obj" />
+    <Content Include="Source\Assignment3\Code\models\spot\spot_triangulated_good.obj" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="Source\Assignment2\global.hpp" />
-    <ClInclude Include="Source\Assignment2\rasterizer.hpp" />
-    <ClInclude Include="Source\Assignment2\Triangle.hpp" />
+    <ClInclude Include="Source\Assignment3\Code\global.hpp" />
+    <ClInclude Include="Source\Assignment3\Code\OBJ_Loader.h" />
+    <ClInclude Include="Source\Assignment3\Code\rasterizer.hpp" />
+    <ClInclude Include="Source\Assignment3\Code\Shader.hpp" />
+    <ClInclude Include="Source\Assignment3\Code\Texture.hpp" />
+    <ClInclude Include="Source\Assignment3\Code\Triangle.hpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="Source\Assignment2\main.cpp" />
-    <ClCompile Include="Source\Assignment2\rasterizer.cpp" />
-    <ClCompile Include="Source\Assignment2\Triangle.cpp" />
+    <ClCompile Include="Source\Assignment3\Code\main.cpp" />
+    <ClCompile Include="Source\Assignment3\Code\rasterizer.cpp" />
+    <ClCompile Include="Source\Assignment3\Code\Texture.cpp" />
+    <ClCompile Include="Source\Assignment3\Code\Triangle.cpp" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>18.0</VCProjectVersion>
