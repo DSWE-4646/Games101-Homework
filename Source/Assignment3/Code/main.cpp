@@ -8,6 +8,9 @@
 #include "Texture.hpp"
 #include "OBJ_Loader.h"
 
+// Shared normal-perturbation strength for bump and displacement.
+constexpr float kNormalGain = 2.0f;
+
 Eigen::Matrix4f get_view_matrix(Eigen::Vector3f eye_pos)
 {
     Eigen::Matrix4f view = Eigen::Matrix4f::Identity();
@@ -100,8 +103,10 @@ Eigen::Vector3f texture_fragment_shader(const fragment_shader_payload& payload)
     Eigen::Vector3f return_color = {0, 0, 0};
     if (payload.texture)
     {
-        // TODO: Get the texture value at the texture coordinates of the current fragment
-
+        //对纹理坐标进行clamp，确保在0-1之间，浮点计算误差会导致超出纹理范围
+        float u = std::clamp(payload.tex_coords.x(), 0.0f, 1.0f);
+        float v = std::clamp(payload.tex_coords.y(), 0.0f, 1.0f);
+        return_color = payload.texture -> getColor(u, v);
     }
     Eigen::Vector3f texture_color;
     texture_color << return_color.x(), return_color.y(), return_color.z();
@@ -127,13 +132,28 @@ Eigen::Vector3f texture_fragment_shader(const fragment_shader_payload& payload)
 
     for (auto& light : lights)
     {
-        // TODO: For each light source in the code, calculate what the *ambient*, *diffuse*, and *specular* 
-        // components are. Then, accumulate that result on the *result_color* object.
+        light.intensity = light.intensity * 2.5;  //提高光照强度，否则高光仅在p = 1时才可见
+        float Distance = (light.position - point).norm(); //Eigen使用norm()计算距离
+        float DistanceSquare = Distance * Distance;
+        Eigen::Vector3f LightDirection = (light.position - point).normalized();
+        Eigen::Vector3f ViewDirection = (eye_pos - point).normalized();
 
+        //diffuse,漫反射项 = 物体颜色 + 光照强度RGB(分量相乘) + 标量贡献值(float)，std::max是模板函数不支持左右值隐式转换
+        Eigen::Vector3f Ld = kd.cwiseProduct(light.intensity / DistanceSquare) * std::max(0.f, normal.dot(LightDirection));
+        //Specular
+        Eigen::Vector3f HalfVector = (LightDirection + ViewDirection).normalized();
+        Eigen::Vector3f Ls = ks.cwiseProduct(light.intensity / DistanceSquare) * std::pow(std::max(0.f, normal.dot(HalfVector)),p);
+        
+        result_color  += Ls + Ld; //多条光线应该累加
     }
+    
+    //Ambient，环境光仅计算一次
+    Eigen::Vector3f La = ka.cwiseProduct(amb_light_intensity);
+    result_color  += La;
 
     return result_color * 255.f;
 }
+
 
 Eigen::Vector3f phong_fragment_shader(const fragment_shader_payload& payload)
 {
@@ -157,8 +177,6 @@ Eigen::Vector3f phong_fragment_shader(const fragment_shader_payload& payload)
     Eigen::Vector3f result_color = {0, 0, 0};
     for (auto& light : lights)
     {
-        // TODO: For each light source in the code, calculate what the *ambient*, *diffuse*, and *specular* 
-        // components are. Then, accumulate that result on the *result_color* object.
         light.intensity = light.intensity * 5;  //提高光照强度，否则高光仅在p = 1时才可见
         float Distance = (light.position - point).norm(); //Eigen使用norm()计算距离
         float DistanceSquare = Distance * Distance;
@@ -185,7 +203,6 @@ Eigen::Vector3f phong_fragment_shader(const fragment_shader_payload& payload)
 
 Eigen::Vector3f displacement_fragment_shader(const fragment_shader_payload& payload)
 {
-    
     Eigen::Vector3f ka = Eigen::Vector3f(0.005, 0.005, 0.005);
     Eigen::Vector3f kd = payload.color;
     Eigen::Vector3f ks = Eigen::Vector3f(0.7937, 0.7937, 0.7937);
@@ -203,10 +220,45 @@ Eigen::Vector3f displacement_fragment_shader(const fragment_shader_payload& payl
     Eigen::Vector3f point = payload.view_pos;
     Eigen::Vector3f normal = payload.normal;
 
-    float kh = 0.2, kn = 0.1;
-    
-    // TODO: Implement displacement mapping here
-    // Let n = normal = (x, y, z)
+    float kn = 0.1f;  // 位移高度：最大 0.1 个 view 单位
+
+    Eigen::Vector3f n = normal.normalized();
+
+    // 极坐标切线：以 y 轴为极轴取经线方向；s≈0 时退化，需要兜底
+    float x = n.x();
+    float y = n.y();
+    float z = n.z();
+    float s = std::sqrt(x * x + z * z);
+    Eigen::Vector3f t;
+    if (s > 1e-6f)
+        t = Eigen::Vector3f(x * y / s, -s, z * y / s);
+    else
+        t = Eigen::Vector3f(1, 0, 0);
+    t = (t - t.dot(n) * n).normalized();
+
+    Eigen::Vector3f b = n.cross(t);
+    Eigen::Matrix3f TBN;
+    TBN << t, b, n;
+
+    float maxU = 1.f - 1.f / payload.texture->width;
+    float minV = 1.f / payload.texture->height;
+    float u = std::clamp(payload.tex_coords.x(), 0.f, maxU);
+    float v = std::clamp(payload.tex_coords.y(), minV, 1.f);
+
+    float UShift = 1.f / payload.texture->width;
+    float VShift = 1.f / payload.texture->height;
+    float h  = payload.texture->getColor(u, v).x() / 255.f;
+    float hu = payload.texture->getColor(std::min(u + UShift, maxU), v).x() / 255.f;
+    float hv = payload.texture->getColor(u, std::min(v + VShift, 1.f)).x() / 255.f;
+
+    float dU = kNormalGain * (hu - h);
+    float dV = kNormalGain * (hv - h);
+    Eigen::Vector3f ln(-dU, -dV, 1);
+
+    Eigen::Vector3f ShiftedPoint = point + kn * n * h;
+    Eigen::Vector3f NewNormal = (TBN * ln).normalized();
+
+
     // Vector t = (x*y/sqrt(x*x+z*z),sqrt(x*x+z*z),z*y/sqrt(x*x+z*z))
     // Vector b = n cross product t
     // Matrix TBN = [t b n]
@@ -221,11 +273,29 @@ Eigen::Vector3f displacement_fragment_shader(const fragment_shader_payload& payl
 
     for (auto& light : lights)
     {
+        light.intensity = light.intensity * 5;  //提高光照强度，否则高光仅在p = 1时才可见
+
+        float Distance = (light.position - ShiftedPoint).norm(); //Eigen使用norm()计算距离
+        float DistanceSquare = Distance * Distance;
+        Eigen::Vector3f LightDirection = (light.position - ShiftedPoint).normalized();
+        Eigen::Vector3f ViewDirection = (eye_pos - ShiftedPoint).normalized();
+
+        //diffuse,漫反射项 = 物体颜色 + 光照强度RGB(分量相乘) + 标量贡献值(float)，std::max是模板函数不支持左右值隐式转换
+        Eigen::Vector3f Ld = kd.cwiseProduct(light.intensity / DistanceSquare) * std::max(0.f, NewNormal.dot(LightDirection));
+        //Specular
+        Eigen::Vector3f HalfVector = (LightDirection + ViewDirection).normalized();
+        Eigen::Vector3f Ls = ks.cwiseProduct(light.intensity / DistanceSquare) * std::pow(std::max(0.f, NewNormal.dot(HalfVector)),p);
+        
+        result_color  += Ls + Ld; //多条光线应该累加
+
+
         // TODO: For each light source in the code, calculate what the *ambient*, *diffuse*, and *specular* 
         // components are. Then, accumulate that result on the *result_color* object.
-
-
     }
+
+    //Ambient，环境光仅计算一次
+    Eigen::Vector3f La = ka.cwiseProduct(amb_light_intensity);
+    result_color  += La;
 
     return result_color * 255.f;
 }
@@ -234,7 +304,7 @@ Eigen::Vector3f displacement_fragment_shader(const fragment_shader_payload& payl
 Eigen::Vector3f bump_fragment_shader(const fragment_shader_payload& payload)
 {
     
-    Eigen::Vector3f ka = Eigen::Vector3f(0.005, 0.005, 0.005);
+    Eigen::Vector3f ka = Eigen::Vector3f(0.005, 0.005, 0.005); //环境光系数,还没被使用
     Eigen::Vector3f kd = payload.color;
     Eigen::Vector3f ks = Eigen::Vector3f(0.7937, 0.7937, 0.7937);
 
@@ -242,7 +312,7 @@ Eigen::Vector3f bump_fragment_shader(const fragment_shader_payload& payload)
     auto l2 = light{{-20, 20, 0}, {500, 500, 500}};
 
     std::vector<light> lights = {l1, l2};
-    Eigen::Vector3f amb_light_intensity{10, 10, 10};
+    Eigen::Vector3f amb_light_intensity{10, 10, 10}; //环境光系数,还没被使用
     Eigen::Vector3f eye_pos{0, 0, 10};
 
     float p = 150;
@@ -252,10 +322,42 @@ Eigen::Vector3f bump_fragment_shader(const fragment_shader_payload& payload)
     Eigen::Vector3f normal = payload.normal;
 
 
-    float kh = 0.2, kn = 0.1;
+    float u_shift = 1.0f / payload.texture->width; //纹素变化的步长
+    float v_shift = 1.0f / payload.texture->height;
 
-    // TODO: Implement bump mapping here
-    // Let n = normal = (x, y, z)
+    float maxU = 1.0f - 1.0f / payload.texture->width;
+    float minV = 1.0f / payload.texture->height;
+    float u = std::clamp(payload.tex_coords.x(), 0.0f, maxU);
+    float v = std::clamp(payload.tex_coords.y(), minV, 1.0f);
+    //getColor 不做边界检查，而 Release 版 OpenCV 把断言编译掉了，越界会静默读到相邻行的数据
+    Eigen::Vector3f CenterHeight = payload.texture -> getColor(u, v);
+    Eigen::Vector3f UHeightShift = payload.texture -> getColor(std::min(u + u_shift, maxU), v);
+    Eigen::Vector3f VHeightShift = payload.texture -> getColor(u, std::min(v + v_shift, 1.0f));
+
+    //对于灰度图，RGB通道存储的都是相同的高度值，所以只需要取一个通道即可
+    //getColor 返回的是 0~255 的原始值，而 hint 的公式假设 h ∈ [0,1]，所以要除以 255
+    float h_center = CenterHeight.x() / 255.f;
+    float h_u = UHeightShift.x() / 255.f;
+    float h_v = VHeightShift.x() / 255.f;
+
+    // 和 displacement 共用同一个法线强度；hint 的 kh*kn=0.02 在 h 归一化后太弱。
+    float dU = kNormalGain * (h_u - h_center);
+    float dV = kNormalGain * (h_v - h_center);
+    Eigen::Vector3f  n = normal.normalized();
+    Eigen::Vector3f ln = Eigen::Vector3f(-dU, -dV, 1);
+    Eigen::Vector3f t = (std::abs(n.x()) < 0.9f)
+                    ? Eigen::Vector3f(1, 0, 0)
+                    : Eigen::Vector3f(0, 1, 0);
+    Eigen::Vector3f T = (t - t.dot(n) * n).normalized();
+    Eigen::Vector3f B = n.cross(T);
+    Eigen::Matrix3f TBN;
+    TBN << T, B, n;
+    Eigen::Vector3f NewNormal = TBN * ln;
+    NewNormal = NewNormal.normalized();
+    
+    
+    
+    //所以作业这里的注释实际就是 t = uv方向的切线， b = uv方向的副切线，n = 法线 然后dU dV是纹素变化在世界坐标系的变化，ln是叉乘得到的法线，TBN将其转换到世界坐标系
     // Vector t = (x*y/sqrt(x*x+z*z),sqrt(x*x+z*z),z*y/sqrt(x*x+z*z))
     // Vector b = n cross product t
     // Matrix TBN = [t b n]
@@ -266,7 +368,27 @@ Eigen::Vector3f bump_fragment_shader(const fragment_shader_payload& payload)
 
 
     Eigen::Vector3f result_color = {0, 0, 0};
-    result_color = normal;
+
+    for (auto& light : lights)
+    {
+        light.intensity = light.intensity * 5;  //提高光照强度，否则高光仅在p = 1时才可见
+        float Distance = (light.position - point).norm(); //Eigen使用norm()计算距离
+        float DistanceSquare = Distance * Distance;
+        Eigen::Vector3f LightDirection = (light.position - point).normalized();
+        Eigen::Vector3f ViewDirection = (eye_pos - point).normalized();
+
+        //diffuse,漫反射项 = 物体颜色 + 光照强度RGB(分量相乘) + 标量贡献值(float)，std::max是模板函数不支持左右值隐式转换
+        Eigen::Vector3f Ld = kd.cwiseProduct(light.intensity / DistanceSquare) * std::max(0.f, NewNormal.dot(LightDirection));
+        //Specular
+        Eigen::Vector3f HalfVector = (LightDirection + ViewDirection).normalized();
+        Eigen::Vector3f Ls = ks.cwiseProduct(light.intensity / DistanceSquare) * std::pow(std::max(0.f, NewNormal.dot(HalfVector)),p);
+        
+        result_color  += Ls + Ld; //多条光线应该累加
+    }
+
+    //Ambient，环境光仅计算一次
+    Eigen::Vector3f La = ka.cwiseProduct(amb_light_intensity);
+    result_color  += La;
 
     return result_color * 255.f;
 }
@@ -278,7 +400,7 @@ int main(int argc, const char** argv)
     float angle = 40.f;
     bool command_line = false;
 
-    std::string filename = "output.png";
+    std::string filename = "TestBump.png";
     objl::Loader Loader;
     std::string obj_path = "models/spot/";
 

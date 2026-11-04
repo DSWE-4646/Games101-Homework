@@ -32,3 +32,5 @@
 *.tmp
 *.sln.docstates
 *.pdf
+# 4. 官方作业包解压目录（实际代码在 Source/ 下）
+/Assignment3/
