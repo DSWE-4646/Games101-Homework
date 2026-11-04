@@ -9,4 +9,8 @@
     <Configuration Solution="Release|x64" Project="Release|x64" />
     <Configuration Solution="Release|Win32" Project="Release|Win32" />
   </Project>
+  <Project Path="G:/Games101/Housework/Games101-A1/Assignment4.vcxproj">
+    <Configuration Solution="Debug|x64" Project="Debug|x64" />
+    <Configuration Solution="Release|x64" Project="Release|x64" />
+  </Project>
 </Solution>

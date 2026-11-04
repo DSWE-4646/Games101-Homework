@@ -23,6 +23,8 @@
 *.obj
 *.pdb
 *.ilk
+*.iobj
+*.ipdb
 *.exe
 *.idb
 *.recipe
